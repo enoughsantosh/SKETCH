@@ -90,7 +90,9 @@
                 <button id="undo" class="px-3 py-1.5 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
                     Undo
                 </button>
-
+                <button id="save" class="px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                    Save
+                </button>
             </div>
 
             <!-- Color and Size Controls -->
@@ -123,9 +125,12 @@
         </div>
 
         <!-- Canvas Container -->
-        <div class="bg-white rounded-xl shadow-lg p-2  relative">
+        <div class="bg-white rounded-xl shadow-lg p-2 aspect-full relative">
             <canvas id="canvas" class="w-full h-full rounded-lg touch-none"></canvas>
-
+            <div class="zoom-controls hidden">
+                <button id="zoomIn">+</button>
+                <button id="zoomOut">-</button>
+            </div>
         </div>
     </div>
 
