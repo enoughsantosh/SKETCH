@@ -3,116 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Drawing App</title>
+    <title>Enhanced Drawing App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            min-height: 100vh;
-            background: #f0f2f5;
-            touch-action: none;
-            overflow: hidden;
+            overscroll-behavior: none;
         }
 
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 1rem;
+        .custom-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3B82F6;
+            border-radius: 50%;
+            cursor: pointer;
         }
 
-        .toolbar {
-            background: white;
-            padding: 1rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 1rem;
+        .tool-active {
+            @apply ring-2 ring-blue-500 ring-offset-2;
+        }
+
+        .color-swatch {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .zoom-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
             display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            align-items: center;
+            gap: 10px;
         }
 
-        .control-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        label {
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        input[type="color"] {
+        .zoom-controls button {
             width: 40px;
             height: 40px;
-            border: none;
-            border-radius: 8px;
-            background: none;
-            cursor: pointer;
-        }
-
-        input[type="range"] {
-            width: 100px;
-        }
-
-        button {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 8px;
-            background: #007AFF;
+            background-color: #3B82F6;
             color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
             cursor: pointer;
-            transition: background 0.2s;
-            font-weight: 500;
-        }
-
-        button:hover {
-            background: #0056b3;
-        }
-
-        button.eraser {
-            background: #FF3B30;
-        }
-
-        button.eraser.active {
-            background: #cc2f26;
-        }
-
-        button.clear {
-            background: #FF9500;
-        }
-
-        canvas {
-            width: 100%;
-            height: calc(100vh - 130px);
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            touch-action: none;
+            border: none;
+            outline: none;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="toolbar">
-            <div class="control-group">
-                <label for="color">Color:</label>
-                <input type="color" id="color" value="#000000">
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-7xl mx-auto p-4">
+        <!-- Header -->
+        <header class="mb-4">
+            <h1 class="text-2xl font-bold text-gray-800">Drawing Canvas</h1>
+        </header>
+
+        <!-- Toolbar -->
+        <div class="bg-white rounded-xl shadow-lg p-4 mb-4 space-y-4">
+            <!-- Primary Tools -->
+            <div class="flex flex-wrap gap-2">
+                <button id="penTool" class="tool-active px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    Pen
+                </button>
+                <button id="eraser" class="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                    Eraser
+                </button>
+                <button id="clear" class="px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
+                    Clear
+                </button>
+                <button id="undo" class="px-3 py-1.5 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+                    Undo
+                </button>
+
             </div>
-            <div class="control-group">
-                <label for="size">Size:</label>
-                <input type="range" id="size" min="1" max="50" value="5">
+
+            <!-- Color and Size Controls -->
+            <div class="flex flex-wrap gap-3 items-center">
+                <div class="space-y-1">
+                    <label class="text-sm text-gray-600">Color:</label>
+                    <div class="flex gap-2">
+                        <input type="color" id="color" class="w-8 h-8 rounded-lg cursor-pointer" value="#000000">
+                        <div class="flex gap-2" id="colorSwatches">
+                            <div class="color-swatch bg-black" data-color="#000000"></div>
+                            <div class="color-swatch bg-red-500" data-color="#EF4444"></div>
+                            <div class="color-swatch bg-blue-500" data-color="#3B82F6"></div>
+                            <div class="color-swatch bg-green-500" data-color="#10B981"></div>
+                            <div class="color-swatch bg-yellow-500" data-color="#F59E0B"></div>
+                            <div class="color-swatch bg-purple-500" data-color="#8B5CF6"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm text-gray-600">Size:</label>
+                    <input type="range" id="size" min="1" max="50" value="5" 
+                           class="custom-range w-24 md:w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm text-gray-600">Opacity:</label>
+                    <input type="range" id="opacity" min="1" max="100" value="100" 
+                           class="custom-range w-24 md:w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                </div>
             </div>
-            <button class="eraser" id="eraser">Eraser</button>
-            <button class="clear" id="clear">Clear</button>
         </div>
-        <canvas id="canvas"></canvas>
+
+        <!-- Canvas Container -->
+        <div class="bg-white rounded-xl shadow-lg p-2  relative">
+            <canvas id="canvas" class="w-full h-full rounded-lg touch-none"></canvas>
+
+        </div>
     </div>
 
     <script>
@@ -120,17 +134,32 @@
         const ctx = canvas.getContext('2d');
         const colorPicker = document.getElementById('color');
         const sizePicker = document.getElementById('size');
+        const opacityPicker = document.getElementById('opacity');
         const eraserBtn = document.getElementById('eraser');
+        const penBtn = document.getElementById('penTool');
         const clearBtn = document.getElementById('clear');
+        const undoBtn = document.getElementById('undo');
+        const saveBtn = document.getElementById('save');
+        const colorSwatches = document.getElementById('colorSwatches');
+        const zoomInBtn = document.getElementById('zoomIn');
+        const zoomOutBtn = document.getElementById('zoomOut');
 
         let isDrawing = false;
         let isEraser = false;
         let lastX = 0;
         let lastY = 0;
+        let undoStack = [];
+        let scale = 1;
+
+        function saveState() {
+            undoStack.push(canvas.toDataURL());
+            if (undoStack.length > 10) undoStack.shift(); // Keep last 10 states
+        }
 
         function resizeCanvas() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
         }
@@ -153,6 +182,7 @@
             ctx.lineTo(x, y);
             ctx.strokeStyle = isEraser ? '#ffffff' : colorPicker.value;
             ctx.lineWidth = sizePicker.value;
+            ctx.globalAlpha = opacityPicker.value / 100;
             ctx.stroke();
             
             [lastX, lastY] = [x, y];
@@ -160,6 +190,7 @@
 
         function startDrawing(e) {
             isDrawing = true;
+            saveState();
             if (e.type.includes('mouse')) {
                 [lastX, lastY] = [e.offsetX, e.offsetY];
             } else {
@@ -175,13 +206,60 @@
             isDrawing = false;
         }
 
+        // Tool Handlers
         eraserBtn.addEventListener('click', () => {
-            isEraser = !isEraser;
-            eraserBtn.classList.toggle('active');
+            isEraser = true;
+            eraserBtn.classList.add('tool-active');
+            penBtn.classList.remove('tool-active');
+        });
+
+        penBtn.addEventListener('click', () => {
+            isEraser = false;
+            penBtn.classList.add('tool-active');
+            eraserBtn.classList.remove('tool-active');
         });
 
         clearBtn.addEventListener('click', () => {
+            saveState();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        undoBtn.addEventListener('click', () => {
+            if (undoStack.length > 0) {
+                const img = new Image();
+                img.src = undoStack.pop();
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+            }
+        });
+
+        saveBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'drawing.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        // Color Swatches
+        colorSwatches.addEventListener('click', (e) => {
+            if (e.target.classList.contains('color-swatch')) {
+                const color = e.target.dataset.color;
+                colorPicker.value = color;
+            }
+        });
+
+        // Zoom Controls
+        zoomInBtn.addEventListener('click', () => {
+            scale += 0.1;
+            ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        });
+
+        zoomOutBtn.addEventListener('click', () => {
+            scale -= 0.1;
+            if (scale < 0.1) scale = 0.1;
+            ctx.setTransform(scale, 0, 0, scale, 0, 0);
         });
 
         // Mouse Events
@@ -200,6 +278,40 @@
             draw(e);
         });
         canvas.addEventListener('touchend', stopDrawing);
+
+        // Pinch-to-Zoom for Touch Devices
+        let initialDistance = null;
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                initialDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+
+                if (initialDistance !== null) {
+                    const delta = currentDistance - initialDistance;
+                    scale += delta * 0.01;
+                    if (scale < 0.1) scale = 0.1;
+                    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+                    initialDistance = currentDistance;
+                }
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            initialDistance = null;
+        });
 
         // Initial setup
         window.addEventListener('resize', resizeCanvas);
